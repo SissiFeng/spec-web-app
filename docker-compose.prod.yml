@@ -1,0 +1,60 @@
+version: "3.8"
+
+# Production compose — uses GHCR images + Watchtower auto-update
+# Usage:
+#   1. Copy .env.example → .env and fill in values
+#   2. docker compose -f docker-compose.prod.yml up -d
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: spec
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: spec_hub
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spec -d spec_hub"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_PREFIX}/backend:latest
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://spec:${DB_PASSWORD}@postgres:5432/spec_hub
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: 3001
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  frontend:
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_PREFIX}/frontend:latest
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${PORT:-80}:80"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  watchtower:
+    image: containrrr/watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/.docker/config.json:/config.json:ro
+    environment:
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_POLL_INTERVAL: 60
+      WATCHTOWER_LABEL_ENABLE: "true"
+    command: --interval 60
+
+volumes:
+  pgdata:
