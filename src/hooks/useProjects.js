@@ -1,13 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
-import { apiFetch } from "../lib/api";
+import { apiFetch, getToken } from "../lib/api";
 import { projectToRow, rowToProject } from "../lib/serializers";
 
-export function useProjects() {
+export function useProjects(user) {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch all projects
+  // Fetch all projects when user is available
   useEffect(() => {
+    if (!user || !getToken()) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
     apiFetch("/projects")
       .then((rows) => {
         setProjects(rows.map(rowToProject));
@@ -16,7 +21,7 @@ export function useProjects() {
         console.error("Failed to fetch projects:", err);
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [user]);
 
   const addProject = useCallback(async (config) => {
     const row = projectToRow(config);

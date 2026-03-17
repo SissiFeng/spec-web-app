@@ -25,8 +25,12 @@ export async function apiFetch(path, options = {}) {
   const res = await fetch(`/api${path}`, { ...options, headers });
 
   if (res.status === 401) {
-    clearToken();
-    window.location.reload();
+    // Only force-reload if we had a token that's now invalid (expired/revoked).
+    // If no token, just throw — the UI will show the login screen.
+    if (token) {
+      clearToken();
+      window.location.reload();
+    }
     throw new Error("Unauthorized");
   }
 

@@ -15,7 +15,7 @@ function withIcon(project) {
 
 export default function App() {
   const { user, loading: authLoading, signIn, signUp, signOut } = useAuth();
-  const { projects: dbProjects, loading: projectsLoading, addProject } = useProjects();
+  const { projects: dbProjects, loading: projectsLoading, addProject } = useProjects(user);
 
   const projects = dbProjects.map(withIcon);
   const loading = authLoading || projectsLoading;
