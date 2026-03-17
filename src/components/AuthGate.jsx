@@ -8,6 +8,22 @@ export default function AuthGate({ onSignIn, onSignUp }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const handleDemo = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      await onSignIn("demo@spec.hub", "demo123456");
+    } catch {
+      try {
+        await onSignUp("demo@spec.hub", "demo123456");
+      } catch (err) {
+        setError(err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -84,6 +100,17 @@ export default function AuthGate({ onSignIn, onSignUp }) {
               className="text-xs text-gray-500 hover:text-gray-700"
             >
               {mode === "signin" ? "Need an account? Sign Up" : "Already have an account? Sign In"}
+            </button>
+          </div>
+
+          <div className="border-t pt-4">
+            <button
+              type="button"
+              onClick={handleDemo}
+              disabled={loading}
+              className="w-full py-2 bg-white text-gray-600 text-sm font-medium rounded-lg border hover:bg-gray-50 disabled:opacity-50"
+            >
+              Try Demo
             </button>
           </div>
         </form>
