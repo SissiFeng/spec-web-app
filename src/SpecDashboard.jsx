@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import {
-  FileText, CheckCircle, BookOpen, Shield, Package, Link, Plus,
+  FileText, CheckCircle, BookOpen, Shield, Package, Link, Plus, Upload,
 } from "lucide-react";
 import { ProjectContext } from "./data/ProjectContext";
 import { now, today } from "./data/constants";
@@ -11,6 +11,7 @@ import ReleaseDiff from "./components/ReleaseDiff";
 import DependencyView from "./components/DependencyView";
 import DetailPanel from "./components/DetailPanel";
 import FormModal from "./components/FormModal";
+import ImportNotesModal from "./components/ImportNotesModal";
 
 // ─── All possible nav entries ────────────────────────────────────────
 
@@ -47,6 +48,7 @@ export default function SpecDashboard({ config, user }) {
   );
   const [selectedItem, setSelectedItem] = useState(null);
   const [showForm, setShowForm] = useState(null);
+  const [showImport, setShowImport] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // ─── Data layer: REST API + WebSocket ─────────────────────────────
@@ -173,6 +175,9 @@ export default function SpecDashboard({ config, user }) {
                   ))}
                 </div>
               )}
+              <button onClick={() => setShowImport(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50 text-gray-600">
+                <Upload size={14} /> Import Notes
+              </button>
               {addType && (
                 <button onClick={() => setShowForm({ type: addType })} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800">
                   <Plus size={14} /> New
@@ -212,6 +217,14 @@ export default function SpecDashboard({ config, user }) {
             onSave={handleSave}
             onClose={() => setShowForm(null)}
             currentUser={currentUser}
+          />
+        )}
+        {/* Import Notes Modal */}
+        {showImport && (
+          <ImportNotesModal
+            projectId={config.id}
+            currentUser={currentUser}
+            onClose={() => setShowImport(false)}
           />
         )}
       </div>

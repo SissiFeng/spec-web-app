@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { randomUUID } from "crypto";
 import pool from "../db.js";
 import { authMiddleware } from "../auth.js";
 import { broadcast } from "../ws.js";
@@ -153,6 +154,58 @@ router.delete("/:id", async (req, res) => {
   } catch (err) {
     console.error("Delete item error:", err);
     res.status(500).json({ error: "Failed to delete item" });
+  }
+});
+
+// POST /api/projects/:pid/items/batch — bulk import from meeting notes
+router.post("/batch", async (req, res) => {
+  const { pid } = req.params;
+  const { items: entries, source, actor } = req.body;
+
+  if (!Array.isArray(entries) || entries.length === 0) {
+    return res.status(400).json({ error: "items array required" });
+  }
+
+  const ts = new Date().toISOString().replace("T", " ").slice(0, 19);
+  const dateStr = new Date().toISOString().slice(0, 10);
+  const created = [];
+
+  try {
+    for (const entry of entries) {
+      const id = randomUUID();
+      const activityLog = [{ actor: actor || "System", action: "Imported from meeting notes", timestamp: ts }];
+
+      const { rows } = await pool.query(
+        `INSERT INTO items
+          (id, project_id, type, title, module, source, owner, assignee, status,
+           tags, related_items, activity_log, type_fields, created_at, updated_at, created_by)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+         RETURNING *`,
+        [
+          id, pid,
+          entry.type || "requirement",
+          entry.title || "",
+          entry.module || "",
+          source || "",
+          "", "",
+          "pending_review",
+          "[]", "[]",
+          JSON.stringify(activityLog),
+          "{}",
+          dateStr, dateStr,
+          req.user.id,
+        ]
+      );
+
+      const item = { ...rows[0], comments: [] };
+      broadcast(pid, "item:upsert", item);
+      created.push(item);
+    }
+
+    res.status(201).json(created);
+  } catch (err) {
+    console.error("Batch import error:", err);
+    res.status(500).json({ error: "Batch import failed" });
   }
 });
 

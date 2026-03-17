@@ -21,12 +21,33 @@ export default function SpecBoard({ items, onSelect }) {
     return m;
   }, [items, config.modules]);
 
+  const pendingReview = items.filter((i) => i.status === "pending_review");
+
   const unresolved = items.filter((i) =>
     ["proposed", "open", "draft", "needs_clarification"].includes(i.status)
   );
 
   return (
     <div className="space-y-4">
+      {pendingReview.length > 0 && (
+        <div className="bg-violet-50 border border-violet-200 rounded-xl p-4">
+          <div className="flex items-center gap-2 text-violet-800 font-medium text-sm mb-2">
+            <AlertTriangle size={15} /> Pending Review ({pendingReview.length})
+          </div>
+          <div className="grid gap-1.5">
+            {pendingReview.slice(0, 10).map((i) => (
+              <div key={i.id} onClick={() => onSelect(i)} className="flex items-center gap-2 text-sm text-violet-900 hover:bg-violet-100 rounded px-2 py-1 cursor-pointer">
+                <StatusBadge status={i.status} />
+                <Badge text={i.type.slice(0, 3)} color="bg-violet-100 text-violet-600" />
+                <span className="truncate">{i.title}</span>
+                <span className="ml-auto text-xs text-violet-500">{i.module}</span>
+              </div>
+            ))}
+            {pendingReview.length > 10 && <div className="text-xs text-violet-500 pl-2">+{pendingReview.length - 10} more...</div>}
+          </div>
+        </div>
+      )}
+
       {unresolved.length > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
           <div className="flex items-center gap-2 text-amber-800 font-medium text-sm mb-2">
