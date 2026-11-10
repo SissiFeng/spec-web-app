@@ -1,14 +1,17 @@
 import { useState } from "react";
-import { Upload, X, ChevronDown } from "lucide-react";
+import { Upload, X, Sparkles } from "lucide-react";
 import { useProjectConfig } from "../data/ProjectContext";
 import { apiFetch } from "../lib/api";
+import { classifyLine } from "../lib/classify";
+import { TYPE_KEYS, typeMeta } from "../data/itemTypes";
+import { pillarByKey } from "../data/pillars";
 
-const TYPES = ["requirement", "decision", "definition", "rule"];
+const TYPES = TYPE_KEYS;
 
 export default function ImportNotesModal({ projectId, currentUser, onClose, onImported }) {
   const config = useProjectConfig();
   const [text, setText] = useState("");
-  const [defaultType, setDefaultType] = useState("requirement");
+  const [defaultType, setDefaultType] = useState("auto");
   const [module, setModule] = useState(config.modules[0] || "");
   const [source, setSource] = useState("");
   const [preview, setPreview] = useState(null);
@@ -26,7 +29,11 @@ export default function ImportNotesModal({ projectId, currentUser, onClose, onIm
       return;
     }
 
-    setPreview(lines.map((title) => ({ title, type: defaultType })));
+    setPreview(lines.map((line) => {
+      const guess = classifyLine(line);
+      if (defaultType === "auto") return guess;
+      return { title: guess.title, type: defaultType, fields: guess.type === defaultType ? guess.fields : {} };
+    }));
     setError("");
   };
 
@@ -39,7 +46,7 @@ export default function ImportNotesModal({ projectId, currentUser, onClose, onIm
       await apiFetch(`/projects/${projectId}/items/batch`, {
         method: "POST",
         body: JSON.stringify({
-          items: preview.map((p) => ({ type: p.type, title: p.title, module })),
+          items: preview.map((p) => ({ type: p.type, title: p.title, module, type_fields: p.fields || {} })),
           source,
           actor: currentUser,
         }),
@@ -76,7 +83,7 @@ export default function ImportNotesModal({ projectId, currentUser, onClose, onIm
                   className="w-full mt-1 border rounded-lg px-3 py-2 text-sm h-40 resize-none focus:ring-1 focus:ring-violet-400 focus:border-violet-400"
                   value={text}
                   onChange={(e) => setText(e.target.value)}
-                  placeholder={"- Change KPI target to 0.99\n- Alerts scope limited to experiment quality\n- Define \"Campaign\" term clearly"}
+                  placeholder={"- Checkout must support guest users\n- RTO for orders ≤ 1 hour\n- Risk: legacy ERP has no API for stock levels\n- Assumption: customer keeps on-prem AD until Q3\n- Decided to go with AKS for the order services"}
                   autoFocus
                 />
               </div>
@@ -84,19 +91,20 @@ export default function ImportNotesModal({ projectId, currentUser, onClose, onIm
               {/* Options row */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium text-gray-500">Default Type</label>
+                  <label className="text-xs font-medium text-gray-500">Item type</label>
                   <select
                     className="w-full mt-1 border rounded-lg px-3 py-2 text-sm bg-white"
                     value={defaultType}
                     onChange={(e) => setDefaultType(e.target.value)}
                   >
+                    <option value="auto">Auto-detect per line</option>
                     {TYPES.map((t) => (
-                      <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                      <option key={t} value={t}>All as {typeMeta(t).label}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-gray-500">Module</label>
+                  <label className="text-xs font-medium text-gray-500">Workload</label>
                   <select
                     className="w-full mt-1 border rounded-lg px-3 py-2 text-sm bg-white"
                     value={module}
@@ -115,7 +123,7 @@ export default function ImportNotesModal({ projectId, currentUser, onClose, onIm
                   className="w-full mt-1 border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-violet-400 focus:border-violet-400"
                   value={source}
                   onChange={(e) => setSource(e.target.value)}
-                  placeholder="Weekly Meeting 2026-03-17"
+                  placeholder="Discovery workshop 2026-11-09"
                 />
               </div>
             </>
@@ -123,7 +131,7 @@ export default function ImportNotesModal({ projectId, currentUser, onClose, onIm
             <>
               {/* Preview */}
               <div className="text-xs text-gray-500 font-medium">
-                Preview — {preview.length} items to import
+                <span className="inline-flex items-center gap-1"><Sparkles size={12} className="text-violet-500" /> Preview — {preview.length} items, types auto-detected. Adjust before importing; they land in the triage inbox.</span>
               </div>
               <div className="space-y-1.5">
                 {preview.map((item, idx) => (
@@ -133,15 +141,18 @@ export default function ImportNotesModal({ projectId, currentUser, onClose, onIm
                       value={item.type}
                       onChange={(e) => {
                         setPreview((prev) =>
-                          prev.map((p, i) => (i === idx ? { ...p, type: e.target.value } : p))
+                          prev.map((p, i) => (i === idx ? { ...p, type: e.target.value, fields: {} } : p))
                         );
                       }}
                     >
                       {TYPES.map((t) => (
-                        <option key={t} value={t}>{t.slice(0, 3)}</option>
+                        <option key={t} value={t}>{typeMeta(t).label}</option>
                       ))}
                     </select>
                     <span className="text-sm text-gray-800 truncate">{item.title}</span>
+                    {item.fields?.pillar && <span className="text-[10px] text-violet-600 shrink-0">{pillarByKey(item.fields.pillar)?.short}</span>}
+                    {item.fields?.raidType && <span className="text-[10px] text-violet-600 shrink-0">{item.fields.raidType}</span>}
+                    {item.fields?.provider && <span className="text-[10px] text-violet-600 shrink-0">{item.fields.provider}</span>}
                     <button
                       onClick={() => setPreview((prev) => prev.filter((_, i) => i !== idx))}
                       className="ml-auto text-gray-400 hover:text-red-500 shrink-0"

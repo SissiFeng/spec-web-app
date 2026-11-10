@@ -37,6 +37,9 @@ export async function initDB() {
     } else {
       console.log("Database already initialized.");
     }
+
+    // Additive migrations for databases created by earlier versions
+    await client.query("ALTER TABLE projects ADD COLUMN IF NOT EXISTS meta JSONB DEFAULT '{}'::jsonb");
   } catch (err) {
     console.error("DB init error:", err.message);
     throw err;

@@ -1,114 +1,94 @@
 import { useState, useMemo } from "react";
-import { ChevronDown, ChevronRight, AlertTriangle, User } from "lucide-react";
+import { ChevronDown, ChevronRight, Inbox, User } from "lucide-react";
 import { useProjectConfig } from "../data/ProjectContext";
-import { Badge, StatusBadge, PriorityBadge, ItemTitle } from "./shared";
+import { TYPE_KEYS, typeMeta, itemTitle } from "../data/itemTypes";
+import { formatUSD } from "../data/constants";
+import { Badge, ItemBadges, ItemTitle, Ref } from "./shared";
 
-export default function SpecBoard({ items, onSelect }) {
+// Workload board: everything in the engagement, grouped by workload.
+
+export default function SpecBoard({ items, refs, onSelect }) {
   const config = useProjectConfig();
-  const [expandedModule, setExpandedModule] = useState(null);
+  const [expanded, setExpanded] = useState(() => new Set());
 
   const byModule = useMemo(() => {
     const m = {};
-    config.modules.forEach((mod) => {
-      m[mod] = { requirements: [], decisions: [], definitions: [], rules: [], releases: [] };
-    });
+    const modules = [...config.modules, ...new Set(items.map((i) => i.module).filter((x) => x && !config.modules.includes(x)))];
+    modules.forEach((mod) => { m[mod] = []; });
     items.forEach((i) => {
       const mod = i.module || config.modules[0];
-      if (!m[mod]) m[mod] = { requirements: [], decisions: [], definitions: [], rules: [], releases: [] };
-      const cat = { requirement: "requirements", decision: "decisions", definition: "definitions", rule: "rules", release: "releases" }[i.type];
-      if (cat && m[mod]) m[mod][cat].push(i);
+      (m[mod] ||= []).push(i);
     });
     return m;
   }, [items, config.modules]);
 
-  const pendingReview = items.filter((i) => i.status === "pending_review");
+  const triage = items.filter((i) => i.status === "pending_review");
 
-  const unresolved = items.filter((i) =>
-    ["proposed", "open", "draft", "needs_clarification"].includes(i.status)
-  );
+  const toggle = (mod) => setExpanded((s) => {
+    const n = new Set(s);
+    n.has(mod) ? n.delete(mod) : n.add(mod);
+    return n;
+  });
 
   return (
     <div className="space-y-4">
-      {pendingReview.length > 0 && (
+      {triage.length > 0 && (
         <div className="bg-violet-50 border border-violet-200 rounded-xl p-4">
           <div className="flex items-center gap-2 text-violet-800 font-medium text-sm mb-2">
-            <AlertTriangle size={15} /> Pending Review ({pendingReview.length})
+            <Inbox size={15} /> Triage inbox ({triage.length}) — confirm type and status of imported notes
           </div>
           <div className="grid gap-1.5">
-            {pendingReview.slice(0, 10).map((i) => (
+            {triage.slice(0, 10).map((i) => (
               <div key={i.id} onClick={() => onSelect(i)} className="flex items-center gap-2 text-sm text-violet-900 hover:bg-violet-100 rounded px-2 py-1 cursor-pointer">
-                <StatusBadge status={i.status} />
-                <Badge text={i.type.slice(0, 3)} color="bg-violet-100 text-violet-600" />
-                <span className="truncate">{i.title}</span>
+                <Badge text={typeMeta(i.type).label} color="bg-violet-100 text-violet-700" />
+                <span className="truncate">{itemTitle(i)}</span>
                 <span className="ml-auto text-xs text-violet-500">{i.module}</span>
               </div>
             ))}
-            {pendingReview.length > 10 && <div className="text-xs text-violet-500 pl-2">+{pendingReview.length - 10} more...</div>}
+            {triage.length > 10 && <div className="text-xs text-violet-500 pl-2">+{triage.length - 10} more...</div>}
           </div>
         </div>
       )}
 
-      {unresolved.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-          <div className="flex items-center gap-2 text-amber-800 font-medium text-sm mb-2">
-            <AlertTriangle size={15} /> Open Questions & Unresolved ({unresolved.length})
-          </div>
-          <div className="grid gap-1.5">
-            {unresolved.slice(0, 8).map((i) => (
-              <div key={i.id} onClick={() => onSelect(i)} className="flex items-center gap-2 text-sm text-amber-900 hover:bg-amber-100 rounded px-2 py-1 cursor-pointer">
-                <StatusBadge status={i.status} />
-                <span className="text-xs text-amber-500 font-mono">{i.id}</span>
-                <span className="truncate">{i.title || i.term || i.component || i.statement}</span>
-                {i.assignee && i.assignee !== "Unassigned" && (
-                  <span className="text-xs text-amber-500 flex items-center gap-0.5"><User size={10} />{i.assignee}</span>
-                )}
-                <span className="ml-auto text-xs text-amber-500">{i.module}</span>
-              </div>
-            ))}
-            {unresolved.length > 8 && <div className="text-xs text-amber-500 pl-2">+{unresolved.length - 8} more...</div>}
-          </div>
-        </div>
-      )}
-
-      {config.modules.map((mod) => {
-        const data = byModule[mod];
-        if (!data) return null;
-        const total = Object.values(data).reduce((s, arr) => s + arr.length, 0);
-        const isExpanded = expandedModule === mod;
+      {Object.entries(byModule).map(([mod, list]) => {
+        const isExpanded = expanded.has(mod);
+        const cost = list.filter((i) => i.type === "component").reduce((s, c) => s + (Number(c.monthlyCost) || 0), 0);
         return (
           <div key={mod} className="bg-white rounded-xl border shadow-sm overflow-hidden">
-            <button className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors" onClick={() => setExpandedModule(isExpanded ? null : mod)}>
+            <button className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors" onClick={() => toggle(mod)}>
               <div className="flex items-center gap-3">
                 {isExpanded ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}
                 <span className="font-semibold text-gray-800">{mod}</span>
-                <span className="text-xs text-gray-400">{total} items</span>
+                <span className="text-xs text-gray-400">{list.length} items</span>
+                {cost > 0 && <span className="text-xs text-gray-500">{formatUSD(cost)}/mo</span>}
               </div>
               <div className="flex gap-1.5">
-                {data.requirements.length > 0 && <Badge text={`${data.requirements.length} req`} color="bg-blue-50 text-blue-600" />}
-                {data.decisions.length > 0 && <Badge text={`${data.decisions.length} dec`} color="bg-green-50 text-green-600" />}
-                {data.definitions.length > 0 && <Badge text={`${data.definitions.length} def`} color="bg-purple-50 text-purple-600" />}
-                {data.rules.length > 0 && <Badge text={`${data.rules.length} rule`} color="bg-orange-50 text-orange-600" />}
-                {data.releases.length > 0 && <Badge text={`${data.releases.length} rel`} color="bg-pink-50 text-pink-600" />}
+                {TYPE_KEYS.map((t) => {
+                  const n = list.filter((i) => i.type === t).length;
+                  return n > 0 && <Badge key={t} text={`${n} ${typeMeta(t).label}`} color={typeMeta(t).color} />;
+                })}
               </div>
             </button>
             {isExpanded && (
-              <div className="border-t px-5 py-3 space-y-2">
-                {Object.entries(data).map(([cat, arr]) => arr.length > 0 && (
-                  <div key={cat}>
-                    <div className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">{cat}</div>
-                    {arr.map((i) => (
-                      <div key={i.id} onClick={() => onSelect(i)} className="flex items-center gap-2 py-1.5 px-2 hover:bg-gray-50 rounded cursor-pointer text-sm">
-                        <span className="text-xs font-mono text-gray-400 w-10">{i.id}</span>
-                        <StatusBadge status={i.status} />
-                        <ItemTitle text={i.title || i.term || i.component || i.statement} status={i.status} />
-                        {i.priority && <PriorityBadge priority={i.priority} />}
-                        {i.assignee && i.assignee !== "Unassigned" && (
-                          <span className="ml-auto text-xs text-gray-400 flex items-center gap-0.5"><User size={10} />{i.assignee}</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ))}
+              <div className="border-t px-5 py-3 space-y-3">
+                {list.length === 0 && <div className="text-sm text-gray-400">Nothing captured for this workload yet.</div>}
+                {TYPE_KEYS.map((t) => {
+                  const arr = list.filter((i) => i.type === t);
+                  if (!arr.length) return null;
+                  return (
+                    <div key={t}>
+                      <div className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">{typeMeta(t).plural}</div>
+                      {arr.map((i) => (
+                        <div key={i.id} onClick={() => onSelect(i)} className="flex items-center gap-2 py-1.5 px-2 hover:bg-gray-50 rounded cursor-pointer text-sm">
+                          <Ref value={refs[i.id]} />
+                          <span className="truncate flex-1"><ItemTitle text={itemTitle(i)} status={i.status} /></span>
+                          <ItemBadges item={i} />
+                          {i.owner && <span className="text-xs text-gray-400 flex items-center gap-0.5"><User size={10} />{i.owner}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

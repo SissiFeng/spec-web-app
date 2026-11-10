@@ -1,6 +1,6 @@
-# Spec Hub
+# CSA Workbench
 
-A collaborative specification management system for research teams. Track requirements, decisions, definitions, rules, and releases across multiple projects with real-time sync.
+A collaborative workbench for Cloud Solution Architects. Capture requirements, NFRs, ADRs, RAID items and architecture components per customer engagement, get a rule-based Well-Architected health check with one-click fixes, and generate customer-ready deliverables. Multi-cloud (Azure / AWS / GCP) with real-time sync.
 
 ## Quick Start (Local)
 
@@ -46,13 +46,18 @@ To create your own account, click **Sign Up** instead.
 
 ## Features
 
-- **Multi-project hub** with sidebar navigation and project wizard
-- **5 item types**: Requirements, Decisions, Definitions, Rules, Releases
-- **Spec Board**: Kanban-style overview grouped by module
-- **Detail panel**: Full item view with comments, activity log, status changes
-- **Real-time sync**: WebSocket-based — changes appear instantly for all users
-- **Persistent data**: PostgreSQL storage survives restarts
-- **Multi-user auth**: JWT-based signup/signin
+- **Engagement wizard** — pick a template (Migration, Modernization, Greenfield, Landing Zone, Data & AI, PoC), target clouds and workloads; optionally start with a WAF NFR checklist, template requirements/RAID and a landing-zone baseline on the primary cloud
+- **5 CSA item types**: Requirements (MoSCoW), NFRs (per pillar, metric + target), ADRs (context / options / decision / consequences), RAID log (likelihood × impact), Architecture components (provider, layer, service, SKU, HA/DR, monthly cost)
+- **Architecture health check** (`src/lib/health.js`) — scores the 5 Well-Architected pillars plus governance, lists next best actions, each with a one-click fix (prefilled form, open item, or jump to page)
+- **Phase gates** — Discovery → Design → Build → Handover exit criteria computed from the data
+- **Architecture view** by layer with per-provider cost roll-up vs. budget NFR; **traceability matrix** (click to link requirements/NFRs to components)
+- **Multi-cloud catalog** — service suggestions per provider/layer and Azure/AWS/GCP equivalents on every component
+- **Smart note import** — paste workshop notes; each line is auto-classified (type, pillar, RAID type, provider) into a triage inbox
+- **Deliverables** — High-Level Design, ADR pack (MADR), weekly status report, multi-cloud mapping (Markdown) and RAID log (CSV)
+- **Real-time sync** (WebSocket), PostgreSQL persistence, JWT multi-user auth
+- Shortcut: press `N` to add an item of the current page's type; `⌘↵` saves a form
+
+Existing databases are migrated automatically (`projects.meta` column). Seed data (`db/seed.sql`) loads only on a fresh database.
 
 ## Production Deployment (Docker)
 

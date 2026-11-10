@@ -18,13 +18,13 @@ export default function HubSidebar({ projects, activeProjectId, onSelectProject,
       {/* Hub header */}
       <div className="px-4 py-4 border-b flex items-center justify-between">
         <div>
-          <h1 className="text-base font-bold text-gray-900 tracking-tight">Spec Hub</h1>
-          <p className="text-xs text-gray-400 mt-0.5">All projects</p>
+          <h1 className="text-base font-bold text-gray-900 tracking-tight">CSA Workbench</h1>
+          <p className="text-xs text-gray-400 mt-0.5">Engagements</p>
         </div>
         <button
           onClick={onNewProject}
           className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-gray-700 transition-colors"
-          title="New project"
+          title="New engagement"
         >
           <Plus size={16} />
         </button>
@@ -54,7 +54,9 @@ export default function HubSidebar({ projects, activeProjectId, onSelectProject,
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-sm truncate">{project.name}</div>
-                <div className="text-xs text-gray-400 truncate">{project.description}</div>
+                <div className="text-xs text-gray-400 truncate">
+                  {[project.meta?.customer, project.meta?.clouds?.join("+"), project.meta?.phase].filter(Boolean).join(" · ") || project.description}
+                </div>
               </div>
               {active && <ChevronRight size={14} className="text-gray-300 shrink-0" />}
             </button>
@@ -64,7 +66,7 @@ export default function HubSidebar({ projects, activeProjectId, onSelectProject,
 
       {/* Footer */}
       <div className="p-3 border-t text-xs text-gray-400 space-y-2">
-        <div>{projects.length} projects</div>
+        <div>{projects.length} engagement{projects.length === 1 ? "" : "s"}</div>
         {user && (
           <div className="flex items-center justify-between">
             <span className="truncate">{user.email}</span>

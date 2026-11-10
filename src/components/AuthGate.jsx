@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FlaskConical } from "lucide-react";
+import { Cloud } from "lucide-react";
 
 export default function AuthGate({ onSignIn, onSignUp }) {
   const [mode, setMode] = useState("signin");
@@ -47,10 +47,10 @@ export default function AuthGate({ onSignIn, onSignUp }) {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center mx-auto mb-3">
-            <FlaskConical size={24} className="text-white" />
+            <Cloud size={24} className="text-white" />
           </div>
-          <h1 className="text-xl font-bold text-gray-900">Spec Hub</h1>
-          <p className="text-sm text-gray-500 mt-1">Sign in to manage project specs</p>
+          <h1 className="text-xl font-bold text-gray-900">CSA Workbench</h1>
+          <p className="text-sm text-gray-500 mt-1">Design, govern and deliver cloud architectures</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border p-6 space-y-4">
