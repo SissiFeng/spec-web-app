@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useAuth } from "./hooks/useAuth";
 import { useProjects } from "./hooks/useProjects";
 import { resolveIcon } from "./lib/iconMap";
+import { apiFetch } from "./lib/api";
 import HubSidebar from "./components/HubSidebar";
 import NewProjectModal from "./components/NewProjectModal";
 import AuthGate from "./components/AuthGate";
@@ -15,7 +16,7 @@ function withIcon(project) {
 
 export default function App() {
   const { user, loading: authLoading, signIn, signUp, signOut } = useAuth();
-  const { projects: dbProjects, loading: projectsLoading, addProject } = useProjects(user);
+  const { projects: dbProjects, loading: projectsLoading, addProject, updateProject } = useProjects(user);
 
   const projects = dbProjects.map(withIcon);
   const loading = authLoading || projectsLoading;
@@ -32,14 +33,25 @@ export default function App() {
 
   const activeConfig = projects.find((p) => p.id === activeProjectId);
 
-  const handleAddProject = useCallback(async (config) => {
+  // Creates the engagement, then its starter pack in one batch request
+  const handleAddProject = useCallback(async (config, starterEntries = []) => {
     try {
       await addProject(config);
+      if (starterEntries.length) {
+        await apiFetch(`/projects/${config.id}/items/batch`, {
+          method: "POST",
+          body: JSON.stringify({
+            items: starterEntries,
+            actor: user?.email?.split("@")[0] || "System",
+            action: "Created from engagement template",
+          }),
+        });
+      }
       setActiveProjectId(config.id);
     } catch (err) {
       console.error("Failed to create project:", err);
     }
-  }, [addProject]);
+  }, [addProject, user]);
 
   // Show auth gate when user not signed in
   if (!authLoading && !user) {
@@ -69,8 +81,8 @@ export default function App() {
           <SpecDashboard
             key={activeConfig.id}
             config={activeConfig}
-            isLocal={false}
             user={user}
+            onUpdateProject={updateProject}
           />
         )}
       </div>

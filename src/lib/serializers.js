@@ -1,12 +1,10 @@
+import { ITEM_TYPES } from "../data/itemTypes";
+
 // ─── Type-specific field keys per item type ───────────────────────
 
-const TYPE_FIELD_KEYS = {
-  requirement: ["userIntent", "priority", "version"],
-  decision: ["statement", "rationale", "decidedBy", "decidedAt", "supersedes", "impactedComponents"],
-  definition: ["term", "definition", "scope", "examples", "unresolvedQuestions"],
-  rule: ["ruleId", "layer", "ruleName", "description", "severity", "blocking", "threshold", "appliesTo", "sourceOfTruth"],
-  release: ["component", "currentBehavior", "requestedChange", "dependency", "backendRequired", "versionTarget"],
-};
+const TYPE_FIELD_KEYS = Object.fromEntries(
+  Object.entries(ITEM_TYPES).map(([type, meta]) => [type, meta.fields.map((f) => f.key)])
+);
 
 // ─── Item ↔ Row conversion ────────────────────────────────────────
 
@@ -82,6 +80,7 @@ export function projectToRow(config) {
     sources: config.sources || [],
     team_members: config.teamMembers || config.team_members || [],
     enabled_types: config.enabledTypes || config.enabled_types || [],
+    meta: config.meta || {},
   };
 }
 
@@ -100,5 +99,6 @@ export function rowToProject(row) {
     sources: row.sources || [],
     teamMembers: row.team_members || [],
     enabledTypes: row.enabled_types || [],
+    meta: row.meta || {},
   };
 }

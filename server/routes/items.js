@@ -157,10 +157,12 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// POST /api/projects/:pid/items/batch — bulk import from meeting notes
+// POST /api/projects/:pid/items/batch — bulk create (note import, templates)
+// Entries may carry status/owner/tags/type_fields; imported notes default to
+// "pending_review" so they show up in the triage queue.
 router.post("/batch", async (req, res) => {
   const { pid } = req.params;
-  const { items: entries, source, actor } = req.body;
+  const { items: entries, source, actor, action } = req.body;
 
   if (!Array.isArray(entries) || entries.length === 0) {
     return res.status(400).json({ error: "items array required" });
@@ -172,8 +174,8 @@ router.post("/batch", async (req, res) => {
 
   try {
     for (const entry of entries) {
-      const id = randomUUID();
-      const activityLog = [{ actor: actor || "System", action: "Imported from meeting notes", timestamp: ts }];
+      const id = entry.id || randomUUID();
+      const activityLog = [{ actor: actor || "System", action: action || "Imported from meeting notes", timestamp: ts }];
 
       const { rows } = await pool.query(
         `INSERT INTO items
@@ -186,12 +188,13 @@ router.post("/batch", async (req, res) => {
           entry.type || "requirement",
           entry.title || "",
           entry.module || "",
-          source || "",
-          "", "",
-          "pending_review",
-          "[]", "[]",
+          entry.source || source || "",
+          entry.owner || "", entry.assignee || "",
+          entry.status || "pending_review",
+          JSON.stringify(entry.tags || []),
+          JSON.stringify(entry.related_items || []),
           JSON.stringify(activityLog),
-          "{}",
+          JSON.stringify(entry.type_fields || {}),
           dateStr, dateStr,
           req.user.id,
         ]

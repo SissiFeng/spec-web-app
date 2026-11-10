@@ -23,14 +23,14 @@ router.post("/", async (req, res) => {
   const {
     id, name, description, icon_name, color,
     modules, statuses, done_statuses, priorities,
-    dependencies, sources, team_members, enabled_types,
+    dependencies, sources, team_members, enabled_types, meta,
   } = req.body;
 
   try {
     const { rows } = await pool.query(
       `INSERT INTO projects
-        (id, name, description, icon_name, color, modules, statuses, done_statuses, priorities, dependencies, sources, team_members, enabled_types, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+        (id, name, description, icon_name, color, modules, statuses, done_statuses, priorities, dependencies, sources, team_members, enabled_types, meta, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
        RETURNING *`,
       [
         id, name, description || "", icon_name || "Flask", color || "blue",
@@ -42,6 +42,7 @@ router.post("/", async (req, res) => {
         JSON.stringify(sources || []),
         JSON.stringify(team_members || []),
         JSON.stringify(enabled_types || []),
+        JSON.stringify(meta || {}),
         req.user.id,
       ]
     );
@@ -61,7 +62,7 @@ router.patch("/:id", async (req, res) => {
   const allowed = [
     "name", "description", "icon_name", "color",
     "modules", "statuses", "done_statuses", "priorities",
-    "dependencies", "sources", "team_members", "enabled_types",
+    "dependencies", "sources", "team_members", "enabled_types", "meta",
   ];
   const sets = [];
   const values = [];

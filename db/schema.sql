@@ -24,6 +24,7 @@ CREATE TABLE projects (
   sources       JSONB DEFAULT '[]'::jsonb,
   team_members  JSONB DEFAULT '[]'::jsonb,
   enabled_types JSONB DEFAULT '[]'::jsonb,
+  meta          JSONB DEFAULT '{}'::jsonb,   -- engagement: customer, clouds, type, phase
   created_at    TIMESTAMPTZ DEFAULT now(),
   created_by    UUID REFERENCES users(id)
 );

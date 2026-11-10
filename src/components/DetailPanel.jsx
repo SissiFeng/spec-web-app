@@ -4,19 +4,41 @@ import {
   MessageSquare, Send, History, ChevronDown, ChevronRight,
 } from "lucide-react";
 import { useProjectConfig } from "../data/ProjectContext";
-import { isDone, SEVERITY_COLORS } from "../data/constants";
-import { Badge, StatusBadge, PriorityBadge, Field } from "./shared";
+import { isDone, formatUSD } from "../data/constants";
+import { typeMeta, itemTitle } from "../data/itemTypes";
+import { pillarByKey } from "../data/pillars";
+import { findCapability } from "../data/cloudCatalog";
+import { Badge, StatusBadge, Field, ItemBadges, TypeBadge, Ref } from "./shared";
 
-export default function DetailPanel({ item, allItems, onClose, onEdit, onDelete, onAddComment, onChangeStatus }) {
+// Renders one schema field's value for read-only display.
+function displayValue(field, value) {
+  if (value === undefined || value === null || value === "" || (Array.isArray(value) && !value.length)) return null;
+  if (field.key === "pillar") return pillarByKey(value)?.label;
+  if (field.key === "pillars") return value.map((k) => pillarByKey(k)?.label).join(", ");
+  if (field.key === "monthlyCost") return `${formatUSD(value)} / month`;
+  if (field.kind === "check") return value ? "Yes" : "No";
+  if (Array.isArray(value)) return value.join(", ");
+  return String(value).replace(/_/g, field.kind === "select" ? " " : "_");
+}
+
+export default function DetailPanel({ item, allItems, refs = {}, onClose, onSelect, onEdit, onDelete, onAddComment, onChangeStatus, currentUser }) {
   const config = useProjectConfig();
   const [commentText, setCommentText] = useState("");
-  const [commentAuthor, setCommentAuthor] = useState(config.teamMembers[0]);
+  const [commentAuthor, setCommentAuthor] = useState(currentUser || config.teamMembers[0]);
   const [showActivityLog, setShowActivityLog] = useState(false);
   const commentInputRef = useRef(null);
 
   if (!item) return null;
-  const related = (item.relatedItems || []).map((rid) => allItems.find((i) => i.id === rid)).filter(Boolean);
-  const done = isDone(item.status, config.doneStatuses);
+  const meta = typeMeta(item.type);
+  // Links are undirected: show items this one points to and items pointing here
+  const relatedIds = new Set([
+    ...(item.relatedItems || []),
+    ...allItems.filter((i) => (i.relatedItems || []).includes(item.id)).map((i) => i.id),
+  ]);
+  const related = [...relatedIds].map((rid) => allItems.find((i) => i.id === rid)).filter(Boolean);
+  const done = isDone(item.status, meta.doneStatuses);
+  const capability = item.type === "component" ? findCapability(item.service) : null;
+  const statuses = config.statuses[item.type] || meta.statuses;
 
   const handleSubmitComment = () => {
     const trimmed = commentText.trim();
@@ -38,7 +60,8 @@ export default function DetailPanel({ item, allItems, onClose, onEdit, onDelete,
         {/* Header */}
         <div className="sticky top-0 bg-white border-b px-5 py-3 flex items-center justify-between z-10">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono text-gray-400">{item.id}</span>
+            <TypeBadge type={item.type} />
+            <Ref value={refs[item.id]} />
             <StatusBadge status={item.status} />
             {item.assignee && item.assignee !== "Unassigned" && (
               <span className="flex items-center gap-1 text-xs text-gray-500">
@@ -50,7 +73,7 @@ export default function DetailPanel({ item, allItems, onClose, onEdit, onDelete,
             <button onClick={() => onEdit(item)} className="p-1.5 hover:bg-gray-100 rounded" title="Edit">
               <Edit3 size={15} />
             </button>
-            <button onClick={() => { onDelete(item.id); onClose(); }} className="p-1.5 hover:bg-red-50 rounded text-red-500" title="Delete">
+            <button onClick={() => { if (window.confirm(`Delete ${refs[item.id] || "this item"}? This cannot be undone.`)) { onDelete(item.id); onClose(); } }} className="p-1.5 hover:bg-red-50 rounded text-red-500" title="Delete">
               <Trash2 size={15} />
             </button>
             <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded">
@@ -62,92 +85,51 @@ export default function DetailPanel({ item, allItems, onClose, onEdit, onDelete,
         <div className="p-5 space-y-5">
           {/* Title */}
           <h2 className={`text-lg font-semibold ${done ? "line-through text-gray-400" : "text-gray-900"}`}>
-            {item.title || item.term || item.component || item.statement}
+            {itemTitle(item)}
           </h2>
+          <div className="flex flex-wrap gap-1.5 -mt-3"><ItemBadges item={item} /></div>
 
           {/* Quick status change */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-400">Status:</span>
-            <select
-              className="text-xs border rounded px-2 py-1 bg-white"
-              value={item.status}
-              onChange={(e) => onChangeStatus(item.id, e.target.value)}
-            >
-              {(config.statuses[item.type] || []).map((s) => (
-                <option key={s} value={s}>{s.replace(/_/g, " ")}</option>
-              ))}
-            </select>
-            <span className="text-xs text-gray-400">Assignee:</span>
-            <span className="text-xs font-medium text-gray-700">{item.assignee || "Unassigned"}</span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {statuses.map((st) => (
+              <button key={st} onClick={() => st !== item.status && onChangeStatus(item.id, st)}
+                className={`px-2 py-0.5 rounded-full text-xs border transition-colors ${st === item.status ? "bg-gray-900 text-white border-gray-900" : "text-gray-500 hover:bg-gray-50"}`}>
+                {st.replace(/_/g, " ")}
+              </button>
+            ))}
           </div>
 
-          {/* Type-specific fields */}
-          {item.type === "requirement" && (
-            <>
-              <Field label="User Intent" value={item.userIntent} long />
-              <Field label="Priority"><PriorityBadge priority={item.priority} /></Field>
-              <Field label="Version" value={item.version} />
-            </>
-          )}
-          {item.type === "decision" && (
-            <>
-              <Field label="Decision Statement" value={item.statement} long />
-              <Field label="Rationale" value={item.rationale} long />
-              <Field label="Decided By" value={item.decidedBy} />
-              <Field label="Decided At" value={item.decidedAt} />
-              <Field label="Supersedes Previous?" value={item.supersedes ? "Yes" : "No"} />
-              <Field label="Impacted Components" value={(item.impactedComponents || []).join(", ")} />
-            </>
-          )}
-          {item.type === "definition" && (
-            <>
-              <Field label="Definition" value={item.definition} long />
-              <Field label="Scope" value={item.scope} />
-              {item.examples?.length > 0 && <Field label="Examples" value={item.examples.join("; ")} long />}
-              {item.unresolvedQuestions?.length > 0 && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                  <div className="text-xs font-medium text-amber-700 mb-1 flex items-center gap-1">
-                    <AlertTriangle size={12} /> Unresolved Questions
-                  </div>
-                  <ul className="text-sm text-amber-800 space-y-1">
-                    {item.unresolvedQuestions.map((q, i) => <li key={i}>• {q}</li>)}
-                  </ul>
+          {/* Type-specific fields (schema-driven) */}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+            {meta.fields.map((f) => {
+              const v = displayValue(f, item[f.key]);
+              const wide = f.kind === "textarea";
+              return (
+                <div key={f.key} className={wide ? "col-span-2" : ""}>
+                  <Field label={f.label} value={v} long={wide} />
                 </div>
-              )}
-            </>
-          )}
-          {item.type === "rule" && (
-            <>
-              <Field label="Rule ID" value={item.ruleId} />
-              <Field label="Layer" value={item.layer} />
-              <Field label="Description" value={item.description} long />
-              <Field label="Severity">
-                <span className={`font-medium ${SEVERITY_COLORS[item.severity]}`}>{item.severity}</span>
-              </Field>
-              <Field label="Blocking?" value={item.blocking ? "Yes — blocks processing" : "No"} />
-              <Field label="Threshold / Formula">
-                <code className="bg-gray-100 px-2 py-0.5 rounded text-sm font-mono">{item.threshold}</code>
-              </Field>
-              <Field label="Applies To" value={item.appliesTo} />
-              <Field label="Source of Truth" value={item.sourceOfTruth} />
-            </>
-          )}
-          {item.type === "release" && (
-            <>
-              <Field label="Current Behavior" value={item.currentBehavior} long />
-              <Field label="Requested Change" value={item.requestedChange} long />
-              <Field label="Dependencies" value={(item.dependency || []).map((d) => d.replace(/_/g, " ")).join(", ")} />
-              <Field label="Backend Required?" value={item.backendRequired ? "Yes" : "No"} />
-              <Field label="Version Target" value={item.versionTarget} />
-            </>
+              );
+            })}
+          </div>
+
+          {capability && (
+            <div className="bg-gray-50 rounded-lg p-3 text-xs">
+              <div className="font-medium text-gray-700 mb-1">Multi-cloud equivalents · {capability.capability}</div>
+              <div className="grid grid-cols-3 gap-2 text-gray-600">
+                {["Azure", "AWS", "GCP"].map((p) => (
+                  <div key={p} className={p === item.provider ? "font-semibold text-gray-900" : ""}><div className="text-gray-400">{p}</div>{capability[p]}</div>
+                ))}
+              </div>
+            </div>
           )}
 
           {/* Metadata */}
           <div className="border-t pt-4 space-y-3">
-            <Field label="Module" value={item.module} />
-            <Field label="Owner" value={item.owner || "—"} />
-            <Field label="Assignee" value={item.assignee || "Unassigned"} />
-            <Field label="Source" value={item.source} />
+            <div className="grid grid-cols-3 gap-3">
+              <Field label="Workload" value={item.module} />
+              <Field label="Owner" value={item.owner || "—"} />
+              <Field label="Source" value={item.source} />
+            </div>
             {item.tags?.length > 0 && (
               <Field label="Tags">
                 <div className="flex flex-wrap gap-1">
@@ -165,13 +147,15 @@ export default function DetailPanel({ item, allItems, onClose, onEdit, onDelete,
           {related.length > 0 && (
             <div className="border-t pt-4">
               <div className="text-xs font-medium text-gray-500 mb-2 flex items-center gap-1">
-                <Link size={12} /> Related Items
+                <Link size={12} /> Traceability ({related.length})
               </div>
               <div className="space-y-1">
                 {related.map((r) => (
-                  <div key={r.id} className="text-sm text-blue-600 hover:underline cursor-pointer">
-                    [{r.id}] {r.title || r.term || r.component || r.statement}
-                  </div>
+                  <button key={r.id} onClick={() => onSelect?.(r.id)} className="w-full flex items-center gap-2 text-sm text-left hover:bg-gray-50 rounded px-1.5 py-1">
+                    <Ref value={refs[r.id]} />
+                    <span className="truncate flex-1 text-blue-700">{itemTitle(r)}</span>
+                    <StatusBadge status={r.status} />
+                  </button>
                 ))}
               </div>
             </div>
@@ -210,7 +194,7 @@ export default function DetailPanel({ item, allItems, onClose, onEdit, onDelete,
                   value={commentAuthor}
                   onChange={(e) => setCommentAuthor(e.target.value)}
                 >
-                  {config.teamMembers.filter((m) => m !== "Unassigned").map((m) => (
+                  {[...new Set([commentAuthor, ...config.teamMembers.filter((m) => m !== "Unassigned")])].map((m) => (
                     <option key={m} value={m}>{m}</option>
                   ))}
                 </select>

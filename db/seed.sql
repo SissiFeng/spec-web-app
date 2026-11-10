@@ -1,273 +1,49 @@
--- ─── Seed Data for Spec Hub ────────────────────────────────────────
--- Run after schema.sql to populate initial projects and items
+-- ─── Seed Data for CSA Workbench ──────────────────────────────────
+-- One demo engagement, deliberately left with gaps so the health
+-- engine has findings to show. Run after schema.sql.
 
--- ─── Projects ─────────────────────────────────────────────────────
-
-INSERT INTO projects (id, name, description, icon_name, color, modules, statuses, done_statuses, priorities, dependencies, sources, team_members, enabled_types) VALUES
-('sdl-battery', 'SDL Battery', 'Real-time monitoring & data management', 'Battery', 'blue',
- '["Overview", "Campaign", "Alerts", "Analysis", "Data Explorer"]',
- '{"requirement": ["proposed", "confirmed", "rejected", "implemented", "deprecated"], "decision": ["open", "needs_clarification", "confirmed", "implemented", "deprecated"], "definition": ["draft", "needs_clarification", "confirmed", "deprecated"], "rule": ["proposed", "confirmed", "implemented", "deprecated"], "release": ["planned", "in_progress", "completed", "reverted"]}',
- '["implemented", "completed", "deprecated", "rejected", "reverted"]',
- '["critical", "high", "medium", "low"]',
- '["frontend_only", "backend_only", "ETL", "schema", "scientific_definition_needed", "PM_approval_needed"]',
- '["Ali", "Scientist", "PM", "Meeting", "Code Review", "Slack"]',
- '["Ali", "Dr. Chen", "PM", "Tech Lead", "Unassigned"]',
- '["requirement", "decision", "definition", "rule", "release"]'),
-
-('catalyst-lab', 'Catalyst Lab', 'Catalyst synthesis experiment tracking', 'Flask', 'emerald',
- '["Dashboard", "Experiments", "Reagents", "Results"]',
- '{"requirement": ["proposed", "confirmed", "rejected", "implemented", "deprecated"], "decision": ["open", "confirmed", "implemented", "deprecated"], "definition": ["draft", "needs_clarification", "confirmed", "deprecated"], "rule": ["proposed", "confirmed", "implemented", "deprecated"]}',
- '["implemented", "completed", "deprecated", "rejected", "reverted"]',
- '["critical", "high", "medium", "low"]',
- '["frontend_only", "backend_only", "lab_equipment", "reagent_order"]',
- '["Lead Chemist", "Lab Tech", "PI", "Meeting", "Lab Notebook"]',
- '["Dr. Park", "Lab Tech A", "Lab Tech B", "PI", "Unassigned"]',
- '["requirement", "decision", "definition", "rule"]'),
-
-('solar-cell', 'Solar Cell Team', 'Photovoltaic efficiency research specs', 'Sun', 'amber',
- '["Overview", "Fabrication", "Characterization", "Modeling"]',
- '{"requirement": ["proposed", "confirmed", "implemented", "deprecated"], "decision": ["open", "confirmed", "implemented"], "definition": ["draft", "confirmed"], "release": ["planned", "in_progress", "completed"]}',
- '["implemented", "completed", "deprecated"]',
- '["high", "medium", "low"]',
- '["frontend_only", "backend_only", "equipment_booking", "simulation_cluster"]',
- '["PI", "Postdoc", "PhD Student", "Meeting"]',
- '["Prof. Zhang", "Dr. Liu", "Student A", "Student B", "Unassigned"]',
- '["requirement", "decision", "definition", "release"]');
-
--- ─── SDL Battery Items ────────────────────────────────────────────
+INSERT INTO projects (id, name, description, icon_name, color, modules, statuses, done_statuses, priorities, dependencies, sources, team_members, enabled_types, meta) VALUES
+('northwind-modernization', 'Northwind Retail Modernization', 'Move storefront and order processing to containers ahead of peak season; keep analytics on the existing AWS contract', 'ShoppingCart', 'blue',
+ '["Landing Zone", "Storefront", "Order API", "Data Platform", "Integration"]', '{"requirement": ["proposed", "confirmed", "in_design", "addressed", "deferred", "rejected", "pending_review"], "nfr": ["draft", "agreed", "validated", "at_risk", "pending_review"], "decision": ["proposed", "accepted", "superseded", "deprecated", "pending_review"], "risk": ["open", "mitigating", "accepted", "closed", "pending_review"], "component": ["proposed", "designed", "deployed", "retired", "pending_review"]}', '["accepted", "addressed", "closed", "deferred", "deployed", "deprecated", "rejected", "retired", "superseded", "validated"]', '["must", "should", "could", "wont"]', '[]',
+ '["Discovery workshop", "Stakeholder interview", "Architecture review", "Email", "Teams / Slack"]', '["Sissi (CSA)", "Priya (Customer EA)", "Marco (Dev Lead)", "Lena (Security)", "PM", "Unassigned"]', '["requirement", "nfr", "decision", "risk", "component"]', '{"customer": "Northwind Traders", "engagementType": "App Modernization", "clouds": ["Azure", "AWS"], "phase": "design", "goLive": "2027-03-31"}');
 
 INSERT INTO items (id, project_id, type, title, module, source, owner, assignee, status, tags, related_items, activity_log, type_fields, created_at, updated_at) VALUES
--- Requirements
-('r1-sdl', 'sdl-battery', 'requirement', 'Change Overview subtitle to ''Real-time monitoring & data management''', 'Overview', 'Ali', 'Ali', 'Ali', 'confirmed',
- '["UI", "copy"]', '["d1-sdl"]',
- '[{"actor":"Ali","action":"Created this requirement","timestamp":"2026-03-10 09:15:00"},{"actor":"PM","action":"Changed status from proposed → confirmed","timestamp":"2026-03-11 11:00:00"}]',
- '{"userIntent":"Make the Overview page subtitle more accurately describe system capabilities","priority":"medium","version":"v2.1"}',
- '2026-03-10', '2026-03-11'),
-
-('r2-sdl', 'sdl-battery', 'requirement', 'Change KPI target to 0.99', 'Overview', 'Scientist', 'Dr. Chen', 'Dr. Chen', 'proposed',
- '["KPI", "threshold"]', '["rule1-sdl"]',
- '[{"actor":"Dr. Chen","action":"Created this requirement","timestamp":"2026-03-11 10:00:00"}]',
- '{"userIntent":"Adjust KPI target threshold from current value to 0.99, reflecting higher quality standards","priority":"high","version":"v2.1"}',
- '2026-03-11', '2026-03-11'),
-
-('r3-sdl', 'sdl-battery', 'requirement', 'Analysis must be attached to a Campaign — no Campaign, no Analysis', 'Analysis', 'PM', 'PM', 'Ali', 'implemented',
- '["architecture", "constraint"]', '["d3-sdl", "def1-sdl"]',
- '[{"actor":"PM","action":"Created this requirement","timestamp":"2026-03-08 14:00:00"},{"actor":"PM","action":"Changed status from proposed → confirmed","timestamp":"2026-03-09 09:00:00"},{"actor":"Ali","action":"Changed status from confirmed → implemented","timestamp":"2026-03-11 16:00:00"}]',
- '{"userIntent":"Ensure Analysis page data is always linked to a Campaign to prevent orphan analyses","priority":"critical","version":"v2.0"}',
- '2026-03-08', '2026-03-11'),
-
-('r4-sdl', 'sdl-battery', 'requirement', 'Add severity filter to Alerts page', 'Alerts', 'Scientist', '', 'Unassigned', 'proposed',
- '["filter", "UX"]', '[]',
- '[{"actor":"Scientist","action":"Created this requirement","timestamp":"2026-03-12 10:00:00"}]',
- '{"userIntent":"Scientists want to quickly find critical alerts without scrolling through pages","priority":"high","version":"v2.2"}',
- '2026-03-12', '2026-03-12'),
-
-('r5-sdl', 'sdl-battery', 'requirement', 'Support CSV export in Data Explorer', 'Data Explorer', 'Meeting', 'Ali', 'Ali', 'confirmed',
- '["export", "data"]', '[]',
- '[{"actor":"Ali","action":"Created this requirement","timestamp":"2026-03-09 10:00:00"}]',
- '{"userIntent":"Scientists need to download filtered data locally for further analysis","priority":"medium","version":"v2.1"}',
- '2026-03-09', '2026-03-10'),
-
--- Decisions
-('d1-sdl', 'sdl-battery', 'decision', '''This Week'' defined as Sunday 00:00 to Saturday 23:59', 'Overview', '2026-03-11 Ali dashboard discussion', 'Ali', 'Ali', 'confirmed',
- '["time", "definition"]', '["r1-sdl"]',
- '[{"actor":"Ali","action":"Created this decision","timestamp":"2026-03-11 10:00:00"}]',
- '{"statement":"All ''This Week'' time ranges in the system are unified as: Sunday 00:00:00 UTC to Saturday 23:59:59 UTC","rationale":"Prevent inconsistencies between frontend, backend, and scientist interpretations of the time window","decidedBy":"Ali + PM","decidedAt":"2026-03-11","supersedes":false,"impactedComponents":["Overview KPI","Campaign timeline","Data Explorer filter"]}',
- '2026-03-11', '2026-03-11'),
-
-('d2-sdl', 'sdl-battery', 'decision', 'Alerts scope limited to experiment quality only, not system errors', 'Alerts', '2026-03-10 product review', 'PM', 'PM', 'confirmed',
- '["scope", "alerts"]', '[]',
- '[{"actor":"PM","action":"Created this decision","timestamp":"2026-03-10 10:00:00"}]',
- '{"statement":"The Alerts module is scoped to experiment quality alerts (e.g. data validation failures, KPI threshold breaches), excluding system-level errors (e.g. server errors, ETL failures)","rationale":"System errors should go through DevOps monitoring channels (PagerDuty/Datadog), not mixed into the scientist''s working interface","decidedBy":"PM + Tech Lead","decidedAt":"2026-03-10","supersedes":false,"impactedComponents":["Alerts page","Notification system"]}',
- '2026-03-10', '2026-03-10'),
-
-('d3-sdl', 'sdl-battery', 'decision', 'Warning data retained but requires manual verification', 'Analysis', '2026-03-11 scientist feedback', 'Dr. Chen', 'Dr. Chen', 'confirmed',
- '["validation", "data-quality"]', '["r3-sdl", "rule2-sdl"]',
- '[{"actor":"Dr. Chen","action":"Created this decision","timestamp":"2026-03-11 10:00:00"}]',
- '{"statement":"When a data row has status ''warning'', it is not automatically discarded. It remains in the system but is marked as requiring scientist manual verification before being included in KPI calculations","rationale":"Automatic discard could cause data loss, but unverified data would pollute KPIs","decidedBy":"Dr. Chen + PM","decidedAt":"2026-03-11","supersedes":true,"impactedComponents":["Validation pipeline","KPI calculation","Status rollup"]}',
- '2026-03-11', '2026-03-11'),
-
--- Definitions
-('def1-sdl', 'sdl-battery', 'definition', '', 'Campaign', '2026-03-08 kickoff meeting', 'PM', 'PM', 'confirmed',
- '["core"]', '["r3-sdl"]',
- '[{"actor":"PM","action":"Created this definition","timestamp":"2026-03-08 10:00:00"}]',
- '{"term":"Campaign","definition":"A group of experiments linked to a particular goal. Campaigns can be dynamically adjusted and may contain multiple sessions. Each Campaign has a clear start time, target metrics, and an owner.","scope":"System-wide","examples":["Stability optimization Q1 2026","Yield improvement for Substrate A"],"unresolvedQuestions":["Can a Campaign span multiple quarters?","Are nested Campaigns allowed?"]}',
- '2026-03-08', '2026-03-11'),
-
-('def2-sdl', 'sdl-battery', 'definition', '', 'Campaign', '2026-03-09 definition workshop', 'Dr. Chen', 'Dr. Chen', 'confirmed',
- '["core"]', '["def1-sdl"]',
- '[{"actor":"Dr. Chen","action":"Created this definition","timestamp":"2026-03-09 10:00:00"}]',
- '{"term":"Session","definition":"A single continuous experimental run belonging to a Campaign. A Session contains fixed experimental conditions (substrate, temperature, pressure, etc.) and a set of data cycles.","scope":"Within Campaign","examples":["Session #42: Substrate A, 25C, 1atm, 200 cycles"],"unresolvedQuestions":["Are mid-session condition changes allowed?","If yes, how should sessions be split?"]}',
- '2026-03-09', '2026-03-09'),
-
-('def3-sdl', 'sdl-battery', 'definition', '', 'Analysis', '2026-03-11 Ali dashboard discussion', '', 'Unassigned', 'draft',
- '["KPI", "unresolved"]', '[]',
- '[{"actor":"Ali","action":"Created this definition","timestamp":"2026-03-11 10:00:00"}]',
- '{"term":"Stability Score","definition":"A composite metric measuring performance degradation of an experiment under given conditions. Calculation method TBD.","scope":"Analysis module","examples":[],"unresolvedQuestions":["Exact formula?","Use degradation rate vs baseline?","Time window for calculation?"]}',
- '2026-03-11', '2026-03-11'),
-
-('def4-sdl', 'sdl-battery', 'definition', '', 'Analysis', '2026-03-10 product review', 'Dr. Chen', 'Dr. Chen', 'needs_clarification',
- '["status", "validation"]', '["rule1-sdl", "rule2-sdl", "d3-sdl"]',
- '[{"actor":"Dr. Chen","action":"Created this definition","timestamp":"2026-03-10 10:00:00"}]',
- '{"term":"Valid / Invalid / Questionable","definition":"Row-level data quality statuses. Valid = passes all validation rules; Invalid = at least one blocking rule fails; Questionable = at least one warning rule triggers but no blocking failures.","scope":"Validation pipeline","examples":["dc_row_count < 100 → Invalid","cycle_count deviates > 2σ from mean → Questionable"],"unresolvedQuestions":["Does Questionable data participate in KPI calculation?","What status is completed_partial?"]}',
- '2026-03-10', '2026-03-11'),
-
--- Rules
-('rule1-sdl', 'sdl-battery', 'rule', '', 'Analysis', '', 'Dr. Chen', 'Dr. Chen', 'implemented',
- '["validation", "data-quality"]', '["def4-sdl"]',
- '[{"actor":"Dr. Chen","action":"Created this rule","timestamp":"2026-03-08 10:00:00"}]',
- '{"ruleId":"VAL-001","layer":"Row Validation","ruleName":"dc_row_count minimum","description":"Each data cycle must contain at least 100 data rows, otherwise it is marked Invalid","severity":"error","blocking":true,"threshold":"dc_row_count >= 100","appliesTo":"Data Cycle","sourceOfTruth":"Scientist requirement"}',
- '2026-03-08', '2026-03-10'),
-
-('rule2-sdl', 'sdl-battery', 'rule', '', 'Analysis', '', 'Dr. Chen', 'Dr. Chen', 'implemented',
- '["validation", "statistical"]', '["def4-sdl", "d3-sdl"]',
- '[{"actor":"Dr. Chen","action":"Created this rule","timestamp":"2026-03-08 10:00:00"}]',
- '{"ruleId":"VAL-002","layer":"Row Validation","ruleName":"cycle_count warning","description":"When cycle count deviates more than 2 standard deviations from the session mean, trigger a warning","severity":"warning","blocking":false,"threshold":"|cycle_count - session_mean| > 2σ","appliesTo":"Data Cycle","sourceOfTruth":"Scientist requirement"}',
- '2026-03-08', '2026-03-10'),
-
-('rule3-sdl', 'sdl-battery', 'rule', '', 'Analysis', '', 'Dr. Chen', 'Dr. Chen', 'confirmed',
- '["validation", "baseline"]', '[]',
- '[{"actor":"Dr. Chen","action":"Created this rule","timestamp":"2026-03-09 10:00:00"}]',
- '{"ruleId":"VAL-003","layer":"Session Validation","ruleName":"baseline_ce_range","description":"Baseline coulombic efficiency must be within 0.95-1.05 range; values outside mark the entire session for review","severity":"warning","blocking":false,"threshold":"0.95 <= baseline_CE <= 1.05","appliesTo":"Session","sourceOfTruth":"Scientist requirement"}',
- '2026-03-09', '2026-03-11'),
-
-('rule4-sdl', 'sdl-battery', 'rule', '', 'Overview', '', 'PM', 'PM', 'confirmed',
- '["rollup", "KPI"]', '["def4-sdl"]',
- '[{"actor":"PM","action":"Created this rule","timestamp":"2026-03-10 10:00:00"}]',
- '{"ruleId":"KPI-001","layer":"KPI Calculation","ruleName":"Status Rollup Logic","description":"Session-level status is determined by all contained data cycle statuses: any Invalid → Session Invalid; all Valid → Session Valid; otherwise → Session Questionable","severity":"info","blocking":false,"threshold":"rollup(cycle_statuses)","appliesTo":"Session → Campaign","sourceOfTruth":"PM + Scientist"}',
- '2026-03-10', '2026-03-11'),
-
--- Releases
-('rel1-sdl', 'sdl-battery', 'release', '', 'Overview', 'r2', 'Ali', 'Ali', 'planned',
- '["KPI"]', '["r2-sdl"]',
- '[{"actor":"Ali","action":"Created this release item","timestamp":"2026-03-11 10:00:00"}]',
- '{"component":"Overview / KPI Card","currentBehavior":"KPI target displayed as 0.95","requestedChange":"Change KPI target to 0.99","dependency":["backend_only"],"backendRequired":true,"versionTarget":"v2.1"}',
- '2026-03-11', '2026-03-11'),
-
-('rel2-sdl', 'sdl-battery', 'release', '', 'Overview', 'r1', 'Ali', 'Ali', 'completed',
- '["UI", "copy"]', '["r1-sdl", "d1-sdl"]',
- '[{"actor":"Ali","action":"Created this release item","timestamp":"2026-03-10 09:00:00"},{"actor":"Ali","action":"Changed status from planned → in_progress","timestamp":"2026-03-10 14:00:00"},{"actor":"Ali","action":"Changed status from in_progress → completed","timestamp":"2026-03-11 10:00:00"}]',
- '{"component":"Overview / Subtitle","currentBehavior":"Displays old subtitle","requestedChange":"Change to ''Real-time monitoring & data management''","dependency":["frontend_only"],"backendRequired":false,"versionTarget":"v2.1"}',
- '2026-03-10', '2026-03-11'),
-
-('rel3-sdl', 'sdl-battery', 'release', '', 'Alerts', 'r4', '', 'Unassigned', 'planned',
- '["filter"]', '["r4-sdl"]',
- '[{"actor":"PM","action":"Created this release item","timestamp":"2026-03-12 10:00:00"}]',
- '{"component":"Alerts / Filter Bar","currentBehavior":"No filter functionality","requestedChange":"Add severity filter (critical / warning / info)","dependency":["frontend_only"],"backendRequired":false,"versionTarget":"v2.2"}',
- '2026-03-12', '2026-03-12');
-
--- ─── SDL Battery Comments ─────────────────────────────────────────
+('req-checkout', 'northwind-modernization', 'requirement', 'Guest checkout handles 5k concurrent shoppers on Black Friday', 'Storefront', 'Discovery workshop', 'Priya (Customer EA)', 'Unassigned', 'confirmed', '[]', '["cmp-aks", "cmp-afd"]', '[{"actor": "Priya (Customer EA)", "action": "Created this item", "timestamp": "2026-10-06 10:00:00"}]', '{"description": "As a shopper I can check out without an account during peak sales.", "category": "functional", "priority": "must", "acceptanceCriteria": "Load test at 5,000 concurrent sessions with <1% checkout errors.", "stakeholder": "Head of eCommerce"}', '2026-10-06', '2026-10-06'),
+('req-sap', 'northwind-modernization', 'requirement', 'Orders sync to SAP within 5 minutes', 'Integration', 'Discovery workshop', 'Marco (Dev Lead)', 'Unassigned', 'confirmed', '[]', '["cmp-sb"]', '[{"actor": "Marco (Dev Lead)", "action": "Created this item", "timestamp": "2026-10-06 10:00:00"}]', '{"description": "Finance reconciles from SAP; orders must appear there quickly.", "category": "integration", "priority": "must", "acceptanceCriteria": "", "stakeholder": "Finance"}', '2026-10-06', '2026-10-06'),
+('req-residency', 'northwind-modernization', 'requirement', 'Customer PII stays in Canadian regions', 'Landing Zone', 'Discovery workshop', 'Lena (Security)', 'Unassigned', 'confirmed', '[]', '["cmp-sql"]', '[{"actor": "Lena (Security)", "action": "Created this item", "timestamp": "2026-10-07 10:00:00"}]', '{"description": "PIPEDA and contractual obligations require Canadian data residency.", "category": "compliance", "priority": "must", "acceptanceCriteria": "Policy denies non-Canadian regions for PII-tagged resources.", "stakeholder": "Privacy Office"}', '2026-10-07', '2026-10-07'),
+('req-analytics', 'northwind-modernization', 'requirement', 'Self-service analytics for merchandising', 'Data Platform', 'Discovery workshop', 'Priya (Customer EA)', 'Unassigned', 'in_design', '[]', '["cmp-redshift", "cmp-s3"]', '[{"actor": "Priya (Customer EA)", "action": "Created this item", "timestamp": "2026-10-08 10:00:00"}]', '{"description": "Merchandisers build their own sell-through reports.", "category": "business", "priority": "should", "acceptanceCriteria": "Top 10 reports rebuilt by business users.", "stakeholder": "Merchandising"}', '2026-10-08', '2026-10-08'),
+('req-sso', 'northwind-modernization', 'requirement', 'Store staff sign in with existing corporate accounts', 'Landing Zone', 'Discovery workshop', 'Lena (Security)', 'Unassigned', 'confirmed', '[]', '[]', '[{"actor": "Lena (Security)", "action": "Created this item", "timestamp": "2026-10-08 10:00:00"}]', '{"description": "No new passwords for 1,200 store staff.", "category": "functional", "priority": "must", "acceptanceCriteria": "Staff access storefront admin via SSO with MFA.", "stakeholder": "Store Operations"}', '2026-10-08', '2026-10-08'),
+('req-push', 'northwind-modernization', 'requirement', 'Push notifications for order status', 'Storefront', 'Discovery workshop', 'PM', 'Unassigned', 'proposed', '[]', '[]', '[{"actor": "PM", "action": "Created this item", "timestamp": "2026-10-20 10:00:00"}]', '{"description": "Nice to have for the mobile app.", "category": "functional", "priority": "could", "acceptanceCriteria": "", "stakeholder": "Marketing"}', '2026-10-20', '2026-10-20'),
+('req-genai', 'northwind-modernization', 'requirement', 'Investigate generative AI for product descriptions', 'Storefront', 'Teams / Slack', '', 'Unassigned', 'pending_review', '[]', '[]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-11-05 10:00:00"}]', '{}', '2026-11-05', '2026-11-05'),
+('nfr-sla', 'northwind-modernization', 'nfr', 'Availability SLA', 'Order API', 'Discovery workshop', 'Sissi (CSA)', 'Unassigned', 'agreed', '[]', '[]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-10-09 10:00:00"}]', '{"pillar": "reliability", "metric": "Availability SLA", "target": "≥ 99.95% monthly for checkout", "measurement": "Synthetic probes from 3 regions; composite SLA of dependencies.", "priority": "must"}', '2026-10-09', '2026-10-09'),
+('nfr-rto', 'northwind-modernization', 'nfr', 'RTO', 'Order API', 'Discovery workshop', 'Sissi (CSA)', 'Unassigned', 'agreed', '[]', '[]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-10-09 10:00:00"}]', '{"pillar": "reliability", "metric": "RTO", "target": "≤ 1 hour for order processing", "measurement": "Quarterly DR drill.", "priority": "must"}', '2026-10-09', '2026-10-09'),
+('nfr-enc', 'northwind-modernization', 'nfr', 'Data encryption', 'Landing Zone', 'Discovery workshop', 'Sissi (CSA)', 'Unassigned', 'agreed', '[]', '[]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-10-09 10:00:00"}]', '{"pillar": "security", "metric": "Data encryption", "target": "At rest with customer-managed keys; TLS 1.2+ in transit", "measurement": "Defender for Cloud regulatory compliance dashboard.", "priority": "must"}', '2026-10-09', '2026-10-09'),
+('nfr-mfa', 'northwind-modernization', 'nfr', 'Identity & access', 'Landing Zone', 'Discovery workshop', 'Sissi (CSA)', 'Unassigned', 'agreed', '[]', '[]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-10-09 10:00:00"}]', '{"pillar": "security", "metric": "Identity & access", "target": "SSO + MFA for all staff; least-privilege RBAC", "measurement": "Entra sign-in logs; quarterly access review.", "priority": "must"}', '2026-10-09', '2026-10-09'),
+('nfr-budget', 'northwind-modernization', 'nfr', 'Monthly run-rate budget', 'Landing Zone', 'Discovery workshop', 'Sissi (CSA)', 'Unassigned', 'agreed', '[]', '[]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-10-09 10:00:00"}]', '{"pillar": "cost", "metric": "Monthly run-rate budget", "target": "≤ $18,000 / month", "measurement": "Azure Cost Management + AWS Cost Explorer, monthly review.", "priority": "must"}', '2026-10-09', '2026-10-09'),
+('nfr-latency', 'northwind-modernization', 'nfr', 'p95 latency', 'Order API', 'Discovery workshop', 'Sissi (CSA)', 'Unassigned', 'draft', '[]', '[]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-10-09 10:00:00"}]', '{"pillar": "performance", "metric": "p95 latency", "target": "≤ 300 ms for product and cart APIs", "measurement": "APM percentiles at peak load.", "priority": "should"}', '2026-10-09', '2026-10-09'),
+('nfr-tput', 'northwind-modernization', 'nfr', 'Peak throughput', 'Order API', 'Discovery workshop', 'Sissi (CSA)', 'Unassigned', 'draft', '[]', '[]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-10-09 10:00:00"}]', '{"pillar": "performance", "metric": "Peak throughput", "target": "5,000 checkout req/s with autoscale", "measurement": "", "priority": "should"}', '2026-10-09', '2026-10-09'),
+('adr-aks', 'northwind-modernization', 'decision', 'Use AKS for storefront and order services', 'Order API', 'Discovery workshop', 'Sissi (CSA)', 'Unassigned', 'accepted', '[]', '["cmp-aks"]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-10-12 10:00:00"}]', '{"context": "Services are already containerised; team needs portability and fine-grained scaling for peak.", "alternatives": "Azure Container Apps\nAKS\nApp Service", "statement": "Run storefront and order services on AKS (Standard tier) across two Canadian regions.", "consequences": "Higher ops burden than Container Apps; mitigated with managed node pools and GitOps.", "pillars": ["performance", "operations"], "decidedBy": "Sissi (CSA), Marco (Dev Lead)", "decidedAt": "2026-10-16"}', '2026-10-12', '2026-10-12'),
+('adr-afd', 'northwind-modernization', 'decision', 'Azure Front Door Premium as global entry point with WAF', 'Storefront', 'Discovery workshop', 'Sissi (CSA)', 'Unassigned', 'accepted', '[]', '["cmp-afd", "cmp-waf"]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-10-12 10:00:00"}]', '{"context": "Need global edge caching, TLS offload and L7 protection.", "alternatives": "Front Door Premium\nApplication Gateway + CDN", "statement": "Front Door Premium with managed WAF rules and private link origins.", "consequences": "Single global dependency; acceptable given 99.99% SLA.", "pillars": ["security", "performance"], "decidedBy": "Sissi (CSA), Lena (Security)", "decidedAt": "2026-10-14"}', '2026-10-12', '2026-10-12'),
+('adr-redshift', 'northwind-modernization', 'decision', 'Keep the analytics lakehouse on AWS', 'Data Platform', 'Discovery workshop', 'Priya (Customer EA)', 'Unassigned', 'proposed', '[]', '["cmp-redshift"]', '[{"actor": "Priya (Customer EA)", "action": "Created this item", "timestamp": "2026-10-15 10:00:00"}]', '{"context": "Northwind has a 3-year Redshift reserved-instance commitment ending 2028.", "alternatives": "Stay on Redshift\nMigrate to Microsoft Fabric", "statement": "Keep analytics on Redshift; replicate order events from Azure to S3.", "consequences": "", "pillars": ["cost"], "decidedBy": "", "decidedAt": ""}', '2026-10-15', '2026-10-15'),
+('adr-sb', 'northwind-modernization', 'decision', 'Service Bus Premium for the SAP integration queue', 'Integration', 'Discovery workshop', 'Marco (Dev Lead)', 'Unassigned', 'proposed', '[]', '["cmp-sb"]', '[{"actor": "Marco (Dev Lead)", "action": "Created this item", "timestamp": "2026-11-03 10:00:00"}]', '{"context": "Order events must reach SAP reliably even when SAP is in maintenance.", "alternatives": "Service Bus Premium\nEvent Grid + Functions", "statement": "Use Service Bus Premium with sessions for ordered delivery.", "consequences": "Premium tier cost; enables geo-DR pairing.", "pillars": ["reliability"], "decidedBy": "", "decidedAt": ""}', '2026-11-03', '2026-11-03'),
+('raid-sap', 'northwind-modernization', 'risk', 'SAP RFC interface may not keep up with peak order volume', 'Integration', 'Discovery workshop', 'Marco (Dev Lead)', 'Unassigned', 'open', '[]', '[]', '[{"actor": "Marco (Dev Lead)", "action": "Created this item", "timestamp": "2026-10-10 10:00:00"}]', '{"raidType": "risk", "pillar": "performance", "likelihood": "high", "impact": "high", "description": "Current interface tested at ~40 orders/s; peak forecast is 120.", "mitigation": "", "dueDate": "2026-11-30"}', '2026-10-10', '2026-10-10'),
+('raid-ad', 'northwind-modernization', 'risk', 'Customer keeps on-prem AD as identity source until Q2 2027', 'Landing Zone', 'Discovery workshop', '', 'Unassigned', 'open', '[]', '[]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-10-01 10:00:00"}]', '{"raidType": "assumption", "pillar": "security", "likelihood": "medium", "impact": "medium", "description": "", "mitigation": "", "dueDate": ""}', '2026-10-01', '2026-10-01'),
+('raid-er', 'northwind-modernization', 'risk', 'Network team provisions ExpressRoute by 15 Dec', 'Landing Zone', 'Discovery workshop', 'Priya (Customer EA)', 'Unassigned', 'mitigating', '[]', '[]', '[{"actor": "Priya (Customer EA)", "action": "Created this item", "timestamp": "2026-10-09 10:00:00"}]', '{"raidType": "dependency", "pillar": "reliability", "likelihood": "medium", "impact": "high", "description": "", "mitigation": "Site-to-site VPN as interim path; weekly check-in with network lead.", "dueDate": "2026-12-15"}', '2026-10-09', '2026-10-09'),
+('raid-egress', 'northwind-modernization', 'risk', 'Cross-cloud egress between Azure and AWS not yet estimated', 'Landing Zone', 'Discovery workshop', 'Sissi (CSA)', 'Unassigned', 'open', '[]', '[]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-11-02 10:00:00"}]', '{"raidType": "issue", "pillar": "cost", "likelihood": "medium", "impact": "medium", "description": "", "mitigation": "Model with both pricing calculators using forecast event volume.", "dueDate": ""}', '2026-11-02', '2026-11-02'),
+('cmp-afd', 'northwind-modernization', 'component', 'Global entry & CDN', 'Storefront', 'Architecture review', 'Sissi (CSA)', 'Unassigned', 'designed', '[]', '[]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-10-13 10:00:00"}]', '{"provider": "Azure", "layer": "Edge & Network", "service": "Azure Front Door", "sku": "Premium", "region": "Global", "haPattern": "active-active multi-region", "monthlyCost": 650, "notes": ""}', '2026-10-13', '2026-10-13'),
+('cmp-entra', 'northwind-modernization', 'component', 'Workforce identity', 'Landing Zone', 'Architecture review', 'Sissi (CSA)', 'Unassigned', 'deployed', '[]', '[]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-10-13 10:00:00"}]', '{"provider": "Azure", "layer": "Identity", "service": "Microsoft Entra ID", "sku": "P1", "region": "Global", "haPattern": "active-active multi-region", "monthlyCost": 1200, "notes": ""}', '2026-10-13', '2026-10-13'),
+('cmp-kv', 'northwind-modernization', 'component', 'Secrets & CMK', 'Landing Zone', 'Architecture review', 'Sissi (CSA)', 'Unassigned', 'designed', '[]', '[]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-10-13 10:00:00"}]', '{"provider": "Azure", "layer": "Security", "service": "Key Vault", "sku": "Premium (HSM)", "region": "Canada Central", "haPattern": "zone-redundant", "monthlyCost": 40, "notes": ""}', '2026-10-13', '2026-10-13'),
+('cmp-waf', 'northwind-modernization', 'component', 'Web application firewall', 'Storefront', 'Architecture review', 'Sissi (CSA)', 'Unassigned', 'designed', '[]', '[]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-10-13 10:00:00"}]', '{"provider": "Azure", "layer": "Security", "service": "Azure WAF", "sku": "Front Door managed rules", "region": "Global", "haPattern": "active-active multi-region", "monthlyCost": 300, "notes": ""}', '2026-10-13', '2026-10-13'),
+('cmp-aks', 'northwind-modernization', 'component', 'Storefront & order services', 'Order API', 'Architecture review', 'Sissi (CSA)', 'Unassigned', 'designed', '[]', '[]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-10-13 10:00:00"}]', '{"provider": "Azure", "layer": "Compute", "service": "AKS", "sku": "Standard, 3× D8s v5 per region", "region": "Canada Central + Canada East", "haPattern": "active-passive multi-region", "monthlyCost": 5200, "notes": ""}', '2026-10-13', '2026-10-13'),
+('cmp-sql', 'northwind-modernization', 'component', 'Orders database', 'Order API', 'Architecture review', 'Sissi (CSA)', 'Unassigned', 'designed', '[]', '[]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-10-13 10:00:00"}]', '{"provider": "Azure", "layer": "Data", "service": "Azure SQL / PostgreSQL Flexible", "sku": "Business Critical 8 vCore", "region": "Canada Central", "haPattern": "single-zone", "monthlyCost": 3900, "notes": ""}', '2026-10-13', '2026-10-13'),
+('cmp-redis', 'northwind-modernization', 'component', 'Session & cart cache', 'Storefront', 'Architecture review', 'Sissi (CSA)', 'Unassigned', 'proposed', '[]', '[]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-10-13 10:00:00"}]', '{"provider": "Azure", "layer": "Data", "service": "Azure Cache for Redis", "sku": "Premium P1", "region": "Canada Central", "haPattern": "zone-redundant", "monthlyCost": "", "notes": ""}', '2026-10-13', '2026-10-13'),
+('cmp-sb', 'northwind-modernization', 'component', 'SAP integration queue', 'Integration', 'Architecture review', 'Sissi (CSA)', 'Unassigned', 'designed', '[]', '[]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-10-13 10:00:00"}]', '{"provider": "Azure", "layer": "Integration", "service": "Service Bus", "sku": "Premium 1 MU", "region": "Canada Central", "haPattern": "zone-redundant", "monthlyCost": 700, "notes": ""}', '2026-10-13', '2026-10-13'),
+('cmp-apim', 'northwind-modernization', 'component', 'Partner API gateway', 'Integration', 'Architecture review', 'Sissi (CSA)', 'Unassigned', 'proposed', '[]', '[]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-10-13 10:00:00"}]', '{"provider": "Azure", "layer": "Integration", "service": "API Management", "sku": "Standard v2", "region": "Canada Central", "haPattern": "zone-redundant", "monthlyCost": 800, "notes": ""}', '2026-10-13', '2026-10-13'),
+('cmp-s3', 'northwind-modernization', 'component', 'Order event landing zone', 'Data Platform', 'Architecture review', 'Sissi (CSA)', 'Unassigned', 'designed', '[]', '[]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-10-13 10:00:00"}]', '{"provider": "AWS", "layer": "Data", "service": "Amazon S3", "sku": "Standard", "region": "ca-central-1", "haPattern": "zone-redundant", "monthlyCost": 450, "notes": ""}', '2026-10-13', '2026-10-13'),
+('cmp-redshift', 'northwind-modernization', 'component', 'Analytics warehouse', 'Data Platform', 'Architecture review', 'Sissi (CSA)', 'Unassigned', 'deployed', '[]', '[]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-10-13 10:00:00"}]', '{"provider": "AWS", "layer": "Data", "service": "Amazon Redshift", "sku": "ra3.xlplus × 2", "region": "ca-central-1", "haPattern": "zone-redundant", "monthlyCost": 2600, "notes": ""}', '2026-10-13', '2026-10-13'),
+('cmp-monitor', 'northwind-modernization', 'component', 'Metrics, logs & alerts', 'Landing Zone', 'Architecture review', 'Sissi (CSA)', 'Unassigned', 'designed', '[]', '[]', '[{"actor": "Sissi (CSA)", "action": "Created this item", "timestamp": "2026-10-13 10:00:00"}]', '{"provider": "Azure", "layer": "Observability", "service": "Azure Monitor + Log Analytics", "sku": "Pay-as-you-go, 50 GB/day", "region": "Canada Central", "haPattern": "zone-redundant", "monthlyCost": 900, "notes": ""}', '2026-10-13', '2026-10-13');
 
 INSERT INTO comments (item_id, author, text, timestamp) VALUES
-('r1-sdl', 'Ali', 'Confirmed in product review — subtitle should reflect monitoring focus.', '2026-03-11 14:30:00'),
-('r3-sdl', 'Ali', 'This is effectively a product rule — should be synced to the Rule Registry.', '2026-03-09 10:00:00'),
-('d3-sdl', 'Dr. Chen', 'This supersedes the previous approach of directly discarding warning data.', '2026-03-11 15:00:00'),
-('def3-sdl', 'Ali', 'This is one of the highest-priority terms to define.', '2026-03-11 16:00:00');
-
--- ─── Catalyst Lab Items ───────────────────────────────────────────
-
-INSERT INTO items (id, project_id, type, title, module, source, owner, assignee, status, tags, related_items, activity_log, type_fields, created_at, updated_at) VALUES
--- Requirements
-('r1-cat', 'catalyst-lab', 'requirement', 'Track reagent lot numbers for each experiment', 'Reagents', 'Lead Chemist', 'Dr. Park', 'Lab Tech A', 'confirmed',
- '["traceability", "reagent"]', '["def1-cat"]',
- '[{"actor":"Dr. Park","action":"Created this requirement","timestamp":"2026-03-05 10:00:00"},{"actor":"PI","action":"Changed status from proposed → confirmed","timestamp":"2026-03-07 14:00:00"}]',
- '{"userIntent":"Enable traceability of reagent batches to experiment outcomes for quality investigations","priority":"high","version":"v1.0"}',
- '2026-03-05', '2026-03-07'),
-
-('r2-cat', 'catalyst-lab', 'requirement', 'Dashboard must show active experiments with real-time yield estimates', 'Dashboard', 'PI', 'PI', 'Unassigned', 'proposed',
- '["dashboard", "real-time"]', '[]',
- '[{"actor":"PI","action":"Created this requirement","timestamp":"2026-03-08 10:00:00"}]',
- '{"userIntent":"PI needs at-a-glance view of all running experiments and their projected outcomes","priority":"high","version":"v1.0"}',
- '2026-03-08', '2026-03-08'),
-
-('r3-cat', 'catalyst-lab', 'requirement', 'Experiment results must include selectivity and conversion metrics', 'Results', 'Lead Chemist', 'Dr. Park', 'Dr. Park', 'confirmed',
- '["metrics", "results"]', '["def2-cat"]',
- '[{"actor":"Dr. Park","action":"Created this requirement","timestamp":"2026-03-04 10:00:00"}]',
- '{"userIntent":"Standard metrics for catalyst evaluation need to be captured for every experiment","priority":"critical","version":"v1.0"}',
- '2026-03-04', '2026-03-06'),
-
--- Decisions
-('d1-cat', 'catalyst-lab', 'decision', 'Use SMILES notation for catalyst structure representation', 'Experiments', '2026-03-06 lab meeting', 'Dr. Park', 'Dr. Park', 'confirmed',
- '["data-format", "chemistry"]', '[]',
- '[{"actor":"Dr. Park","action":"Created this decision","timestamp":"2026-03-06 10:00:00"}]',
- '{"statement":"All catalyst structures in the system will be stored and displayed using SMILES notation, with optional InChI for cross-referencing","rationale":"SMILES is more compact and widely supported by our existing cheminformatics tools","decidedBy":"Dr. Park + PI","decidedAt":"2026-03-06","supersedes":false,"impactedComponents":["Experiment form","Results display","Search"]}',
- '2026-03-06', '2026-03-06'),
-
-('d2-cat', 'catalyst-lab', 'decision', 'Experiments are immutable after 48h', 'Experiments', '2026-03-07 PI directive', 'PI', 'Lab Tech A', 'confirmed',
- '["compliance", "data-integrity"]', '[]',
- '[{"actor":"PI","action":"Created this decision","timestamp":"2026-03-07 10:00:00"}]',
- '{"statement":"Experiment records cannot be modified after 48 hours from completion. Corrections must be added as amendments.","rationale":"Ensures data integrity for regulatory compliance while allowing reasonable correction window","decidedBy":"PI","decidedAt":"2026-03-07","supersedes":false,"impactedComponents":["Experiment editor","Audit trail"]}',
- '2026-03-07', '2026-03-07'),
-
--- Definitions
-('def1-cat', 'catalyst-lab', 'definition', '', 'Reagents', '2026-03-05 reagent workshop', 'Lab Tech A', 'Lab Tech A', 'confirmed',
- '["core", "reagent"]', '["r1-cat"]',
- '[{"actor":"Lab Tech A","action":"Created this definition","timestamp":"2026-03-05 10:00:00"}]',
- '{"term":"Reagent Lot","definition":"A specific batch of a chemical reagent from a single manufacturing run. Each lot has a unique identifier, supplier, purity grade, and expiration date.","scope":"System-wide","examples":["Lot #CAT-2026-0342: Pd(OAc)₂, Sigma-Aldrich, 99.9%, exp 2027-06"],"unresolvedQuestions":["Should we track sub-lots for aliquoted reagents?"]}',
- '2026-03-05', '2026-03-05'),
-
-('def2-cat', 'catalyst-lab', 'definition', '', 'Results', '2026-03-04 definition review', 'Dr. Park', 'Dr. Park', 'needs_clarification',
- '["metric", "chemistry"]', '["r3-cat"]',
- '[{"actor":"Dr. Park","action":"Created this definition","timestamp":"2026-03-04 10:00:00"}]',
- '{"term":"Selectivity","definition":"The ratio of desired product to total products formed in a catalytic reaction, expressed as a percentage.","scope":"Results module","examples":["85% selectivity = 85g desired product per 100g total product"],"unresolvedQuestions":["Include unreacted starting material in calculation?"]}',
- '2026-03-04', '2026-03-06'),
-
--- Rules
-('rule1-cat', 'catalyst-lab', 'rule', '', 'Experiments', '', 'PI', 'Lab Tech B', 'implemented',
- '["validation", "safety"]', '[]',
- '[{"actor":"PI","action":"Created this rule","timestamp":"2026-03-03 10:00:00"}]',
- '{"ruleId":"EXP-001","layer":"Experiment Validation","ruleName":"temperature_range","description":"Reaction temperature must be within -78°C to 300°C; values outside are rejected as instrument error","severity":"error","blocking":true,"threshold":"-78 <= temp_C <= 300","appliesTo":"Experiment","sourceOfTruth":"Lab safety protocol"}',
- '2026-03-03', '2026-03-05');
-
--- Catalyst Lab Comments
-INSERT INTO comments (item_id, author, text, timestamp) VALUES
-('r1-cat', 'Dr. Park', 'Critical for GLP compliance.', '2026-03-06 09:00:00');
-
--- ─── Solar Cell Items ─────────────────────────────────────────────
-
-INSERT INTO items (id, project_id, type, title, module, source, owner, assignee, status, tags, related_items, activity_log, type_fields, created_at, updated_at) VALUES
--- Requirements
-('r1-sol', 'solar-cell', 'requirement', 'Track PCE (Power Conversion Efficiency) for every fabricated cell', 'Characterization', 'PI', 'Prof. Zhang', 'Dr. Liu', 'confirmed',
- '["KPI", "characterization"]', '["def1-sol"]',
- '[{"actor":"Prof. Zhang","action":"Created this requirement","timestamp":"2026-03-01 10:00:00"},{"actor":"Prof. Zhang","action":"Changed status from proposed → confirmed","timestamp":"2026-03-03 11:00:00"}]',
- '{"userIntent":"PCE is our primary KPI — every cell must have a measured PCE before being considered complete","priority":"high","version":"v1.0"}',
- '2026-03-01', '2026-03-03'),
-
-('r2-sol', 'solar-cell', 'requirement', 'Support J-V curve upload and visualization', 'Characterization', 'Postdoc', 'Dr. Liu', 'Unassigned', 'proposed',
- '["data", "visualization"]', '[]',
- '[{"actor":"Dr. Liu","action":"Created this requirement","timestamp":"2026-03-05 10:00:00"}]',
- '{"userIntent":"Researchers need to upload raw J-V measurement files and see the curve plotted with key parameters extracted","priority":"high","version":"v1.1"}',
- '2026-03-05', '2026-03-05'),
-
-('r3-sol', 'solar-cell', 'requirement', 'Fabrication log must capture layer-by-layer deposition parameters', 'Fabrication', 'PhD Student', 'Dr. Liu', 'Student A', 'confirmed',
- '["fabrication", "traceability"]', '[]',
- '[{"actor":"Student A","action":"Created this requirement","timestamp":"2026-03-02 10:00:00"}]',
- '{"userIntent":"Need full process traceability — every layer''s spin speed, annealing temp, thickness must be recorded","priority":"medium","version":"v1.0"}',
- '2026-03-02', '2026-03-04'),
-
--- Decisions
-('d1-sol', 'solar-cell', 'decision', 'Standard test conditions: AM1.5G, 100 mW/cm², 25°C', 'Characterization', '2026-03-01 group meeting', 'Prof. Zhang', 'Dr. Liu', 'confirmed',
- '["standard", "measurement"]', '["r1-sol"]',
- '[{"actor":"Prof. Zhang","action":"Created this decision","timestamp":"2026-03-01 10:00:00"}]',
- '{"statement":"All PCE measurements must be performed under AM1.5G illumination at 100 mW/cm² and 25°C ambient temperature to ensure comparability","rationale":"Industry standard conditions enable comparison with published literature values","decidedBy":"Prof. Zhang","decidedAt":"2026-03-01","supersedes":false,"impactedComponents":["Measurement protocol","Results comparison"]}',
- '2026-03-01', '2026-03-01'),
-
--- Definitions
-('def1-sol', 'solar-cell', 'definition', '', 'Characterization', '2026-03-01 group meeting', 'Prof. Zhang', 'Prof. Zhang', 'confirmed',
- '["core", "KPI"]', '["r1-sol"]',
- '[{"actor":"Prof. Zhang","action":"Created this definition","timestamp":"2026-03-01 10:00:00"}]',
- '{"term":"PCE (Power Conversion Efficiency)","definition":"The ratio of electrical power output to incident light power input, expressed as a percentage. PCE = (Jsc × Voc × FF) / Pin × 100%","scope":"System-wide","examples":["22.5% PCE = champion perovskite cell","26.7% PCE = silicon HJT record"],"unresolvedQuestions":["Report stabilized PCE or instantaneous scan PCE?"]}',
- '2026-03-01', '2026-03-01'),
-
-('def2-sol', 'solar-cell', 'definition', '', 'Characterization', '2026-03-02 definition session', 'Dr. Liu', 'Dr. Liu', 'confirmed',
- '["metric"]', '["def1-sol"]',
- '[{"actor":"Dr. Liu","action":"Created this definition","timestamp":"2026-03-02 10:00:00"}]',
- '{"term":"Fill Factor (FF)","definition":"The ratio of maximum obtainable power to the product of open-circuit voltage and short-circuit current. FF = Pmax / (Voc × Jsc)","scope":"Characterization module","examples":["FF > 0.80 is excellent","FF < 0.60 suggests series resistance issues"],"unresolvedQuestions":[]}',
- '2026-03-02', '2026-03-02'),
-
--- Releases
-('rel1-sol', 'solar-cell', 'release', '', 'Characterization', 'r2', 'Dr. Liu', 'Student B', 'planned',
- '["automation"]', '["r2-sol"]',
- '[{"actor":"Dr. Liu","action":"Created this release item","timestamp":"2026-03-06 10:00:00"}]',
- '{"component":"Characterization / PCE Input","currentBehavior":"Manual text input for PCE value","requestedChange":"Auto-extract PCE from uploaded J-V curve data","dependency":["backend_only"],"backendRequired":true,"versionTarget":"v1.1"}',
- '2026-03-06', '2026-03-06');
+('raid-sap', 'Marco (Dev Lead)', 'SAP basis team can only test the RFC throughput after the Nov freeze.', '2026-10-28 15:20:00'),
+('adr-redshift', 'Priya (Customer EA)', 'Finance wants the RI break-even numbers before we accept this.', '2026-10-22 09:40:00'),
+('cmp-sql', 'Sissi (CSA)', 'Business Critical supports zone redundancy — need to enable it to meet the 99.95% SLA.', '2026-11-04 11:05:00');
